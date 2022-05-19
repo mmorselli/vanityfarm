@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
@@ -32,9 +33,34 @@ func readLines(path string, minchar int, maxchar int) ([]string, error) {
 	return lines, scanner.Err()
 }
 
+func parseArgs() (int, int, bool) {
+
+	if len(os.Args) < 3 {
+		fmt.Println("Not enough arguments")
+		fmt.Println("Usage: vanityfarm [minchar] [maxchar]")
+		return 0, 0, false
+	}
+
+	if len(os.Args) == 3 {
+		minchar, err1 := strconv.Atoi(os.Args[1])
+		maxchar, err2 := strconv.Atoi(os.Args[2])
+		if err1 != nil || err2 != nil {
+			fmt.Println("Invalid arguments")
+			fmt.Println("Usage: vanityfarm [minchar] [maxchar]")
+			return 0, 0, false
+		} else {
+			return minchar, maxchar, true
+		}
+	}
+	return 0, 0, false
+}
+
 func main() {
-	minchar := 3
-	maxchar := 10
+
+	minchar, maxchar, passed := parseArgs()
+	if !passed {
+		return
+	}
 
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
@@ -55,7 +81,7 @@ func main() {
 				account := crypto.GenerateAccount()
 				for a := 0; a < dictlimit; a++ {
 					if strings.HasPrefix(account.Address.String(), dictionary[a]) {
-						fmt.Printf("Found: %s\n", dictionary[a])
+						fmt.Printf("\nFound: %s\n", dictionary[a])
 						fmt.Println(account.Address)
 						mnemonic, _ := mnemonic.FromPrivateKey(account.PrivateKey)
 						fmt.Println(mnemonic)
