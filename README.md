@@ -5,11 +5,13 @@ Vanityfarm is Algorand vanity address generator written in Go. Unlike other simi
 
 # Usage
 
-`vanityfarm <minchar> <maxchar>`
+`vanityfarm <minchar> <maxchar> [logfile]`
 
 # Examples
 
 `vanityfarm 5 12` - program will try to find words between 5 and 12 characters
+
+`vanityfarm 5 12 results.log` - results are written to results.log
 
 It is infinity process, to stop you may send CTRL+C to the program.
 

@@ -16,6 +16,7 @@ import (
 	"github.com/algorand/go-algorand-sdk/mnemonic"
 )
 
+//*********************************************
 // readLines reads a whole file into memory
 // and returns a slice of its lines.
 func readLines(path string, minchar int, maxchar int) ([]string, error) {
@@ -35,28 +36,34 @@ func readLines(path string, minchar int, maxchar int) ([]string, error) {
 	return lines, scanner.Err()
 }
 
-func parseArgs() (int, int, bool) {
+//*********************************************
+func parseArgs() (int, int, string, bool) {
 
 	if len(os.Args) < 3 {
 		fmt.Println("Not enough arguments")
-		fmt.Println("Usage: vanityfarm <minchar> <maxchar>")
-		return 0, 0, false
+		fmt.Println("Usage: vanityfarm <minchar> <maxchar> [logfile]")
+		return 0, 0, "", false
 	}
 
-	if len(os.Args) == 3 {
+	if len(os.Args) >= 3 {
 		minchar, err1 := strconv.Atoi(os.Args[1])
 		maxchar, err2 := strconv.Atoi(os.Args[2])
 		if err1 != nil || err2 != nil {
 			fmt.Println("Invalid arguments")
 			fmt.Println("Usage: vanityfarm [minchar] [maxchar]")
-			return 0, 0, false
+			return 0, 0, "", false
 		} else {
-			return minchar, maxchar, true
+			if len(os.Args) == 3 {
+				return minchar, maxchar, "", true
+			} else {
+				return minchar, maxchar, os.Args[3], true
+			}
 		}
 	}
-	return 0, 0, false
+	return 0, 0, "", false
 }
 
+//*********************************************
 func SetupCloseHandler() {
 	c := make(chan os.Signal)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
@@ -67,23 +74,31 @@ func SetupCloseHandler() {
 	}()
 }
 
+//*********************************************
+func LogToFile(logfile string, word string, address string, mnemonic string) {
+	f, err := os.OpenFile(logfile, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0660)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(-1)
+	}
+	fmt.Fprintf(f, "%s,%s,%s\n", word, address, mnemonic)
+	err = f.Close()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+}
+
+//*********************************************
 func main() {
 
-	minchar, maxchar, passed := parseArgs()
+	minchar, maxchar, logfile, passed := parseArgs()
 	if !passed {
 		return
 	}
 
 	SetupCloseHandler()
-
-	// logfile
-	filename := "vanityfarm.log"
-	f, err := os.OpenFile(filename, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0660)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(-1)
-	}
-	defer f.Close()
 
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
@@ -108,7 +123,9 @@ func main() {
 						fmt.Println(account.Address)
 						mnemonic, _ := mnemonic.FromPrivateKey(account.PrivateKey)
 						fmt.Println(mnemonic)
-						fmt.Fprintf(f, "%s,%s,%s\n", dictionary[a], account.Address, mnemonic)
+						if logfile != "" {
+							LogToFile(logfile, dictionary[a], account.Address.String(), mnemonic)
+						}
 					}
 				}
 				runtime.Gosched()
