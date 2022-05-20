@@ -37,7 +37,7 @@ func parseArgs() (int, int, bool) {
 
 	if len(os.Args) < 3 {
 		fmt.Println("Not enough arguments")
-		fmt.Println("Usage: vanityfarm [minchar] [maxchar]")
+		fmt.Println("Usage: vanityfarm <minchar> <maxchar>")
 		return 0, 0, false
 	}
 
