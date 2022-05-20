@@ -76,6 +76,15 @@ func main() {
 
 	SetupCloseHandler()
 
+	// logfile
+	filename := "vanityfarm.log"
+	f, err := os.OpenFile(filename, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0660)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(-1)
+	}
+	defer f.Close()
+
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	fmt.Printf("Matching started using %d CPU\n", runtime.NumCPU())
@@ -99,6 +108,7 @@ func main() {
 						fmt.Println(account.Address)
 						mnemonic, _ := mnemonic.FromPrivateKey(account.PrivateKey)
 						fmt.Println(mnemonic)
+						fmt.Fprintf(f, "%s,%s,%s\n", dictionary[a], account.Address, mnemonic)
 					}
 				}
 				runtime.Gosched()
