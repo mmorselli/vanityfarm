@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
 	"runtime"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/algorand/go-algorand-sdk/crypto"
@@ -55,12 +57,24 @@ func parseArgs() (int, int, bool) {
 	return 0, 0, false
 }
 
+func SetupCloseHandler() {
+	c := make(chan os.Signal)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		fmt.Println("\rCtrl+C pressed, bye...")
+		os.Exit(0)
+	}()
+}
+
 func main() {
 
 	minchar, maxchar, passed := parseArgs()
 	if !passed {
 		return
 	}
+
+	SetupCloseHandler()
 
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
@@ -94,7 +108,9 @@ func main() {
 	}
 
 	for {
-		time.Sleep(10 * time.Minute)
+
+		time.Sleep(10 * time.Second)
+
 	}
 
 }
